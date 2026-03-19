@@ -1,0 +1,8 @@
+{
+    "python.defaultInterpreterPath": "/bin/python3",
+    "geminicodeassist.project": "trusty-data-xjm1j",
+    "workbench.iconTheme": "catppuccin-mocha",
+    "workbench.colorTheme": "Catppuccin Mocha",
+    "workbench.secondarySideBar.defaultVisibility": "hidden",
+    "security.workspace.trust.untrustedFiles": "open"
+}

@@ -1,0 +1,50 @@
+conky.config = {
+    alignment = 'top_right',
+    background = true,
+    border_width = 1,
+    cpu_avg_samples = 2,
+    default_color = '#cdd6f4', -- Catppuccin Text
+    default_outline_color = '#cdd6f4',
+    default_shade_color = '#cdd6f4',
+    double_buffer = true,
+    draw_borders = false,
+    draw_graph_borders = true,
+    draw_outline = false,
+    draw_shades = false,
+    extra_newline = false,
+    font = 'MesloLGS Nerd Font Mono:size=10',
+    gap_x = 40,
+    gap_y = 60,
+    minimum_height = 5,
+    minimum_width = 5,
+    net_avg_samples = 2,
+    no_buffers = true,
+    out_to_console = false,
+    out_to_ncurses = false,
+    out_to_stderr = false,
+    out_to_x = true,
+    own_window = true,
+    own_window_class = 'Conky',
+    own_window_type = 'desktop',
+    own_window_transparent = true,
+    own_window_hints = 'undecorated,below,sticky,skip_taskbar,skip_pager',
+    show_graph_range = false,
+    show_graph_scale = false,
+    stippled_borders = 0,
+    update_interval = 1.0,
+    uppercase = false,
+    use_spacer = 'none',
+    use_xft = true,
+}
+
+conky.text = [[
+${color #89b4fa}${font MesloLGS Nerd Font Mono:size=30}${time %H:%M}${font}${color}
+${color #bac2de}${font MesloLGS Nerd Font Mono:size=12}${time %A, %d %B}${font}${color}
+${hr 2}
+${color #f5e0dc}󰻠 CPU${color} ${alignr}${cpu cpu0}%
+${color #fab387}${cpugraph 30,200 89b4fa f38ba8 -t}${color}
+${color #f5e0dc}󰍛 RAM${color} ${alignr}${mem} / ${memmax}
+${color #a6e3a1}${membar 10,200}${color}
+${color #f5e0dc}󰋊 SSD${color} ${alignr}${fs_used /} / ${fs_size /}
+${color #f9e2af}${fs_bar 10,200 /}${color}
+]]
