@@ -2,40 +2,56 @@
 
 ## Context
 
-This repository manages the dotfiles for Connor's Linux Mint (Cinnamon) programming workstation.
-It was set up to synchronize a riced development environment between two machines: a home PC and a work laptop.
+This repository manages the dotfiles for Connor's development environment across three machines:
+- **Home PC** — Linux Mint (Cinnamon)
+- **Work machine** — Windows
+- **Laptop** — macOS
 
-## Tool: GNU Stow
+It was set up to synchronize a riced development environment, and uses **Chezmoi** for cross-platform compatibility.
 
-Dotfiles are managed with **GNU Stow**, a symlink farm manager. Each top-level directory in this
-repo is a "package". Running `stow <package>` from inside `~/dotfiles/` creates symlinks in the
-home directory (`~`) that point back into this repo.
+## Tool: Chezmoi
 
-**Why this direction?** Programs look for config files at fixed paths (e.g. `~/.bashrc`). The real
-file must live in the repo so git can track it, while the original path resolves via symlink so
-programs can still find it.
+Dotfiles are managed with **[Chezmoi](https://chezmoi.io)**, a cross-platform dotfile manager.
+Unlike Stow (which uses symlinks), Chezmoi copies files to their target locations and tracks
+changes. It supports templates for machine-specific config, making it suitable for managing
+differences between Linux, macOS, and Windows machines.
+
+The Chezmoi binary is installed at `~/.local/bin/chezmoi`. Update it with:
+
+```bash
+chezmoi upgrade
+```
+
+### Source Directory
+
+The source directory is `~/dotfiles`, configured in `~/.config/chezmoi/chezmoi.toml`:
+
+```toml
+sourceDir = "/home/connor/dotfiles"
+```
 
 ## Repository Structure
 
+Chezmoi uses a `dot_` prefix in place of a leading `.` in filenames, so the source mirrors
+the home directory structure directly:
+
 ```
 ~/dotfiles/
-├── bash/
-│   ├── .bashrc           → ~/.bashrc
-│   └── .profile          → ~/.profile
-├── git/
-│   └── .gitconfig        → ~/.gitconfig
-├── conky/
-│   └── .conkyrc          → ~/.conkyrc
-├── ghostty/
-│   └── .config/ghostty/
-│       └── config.ghostty → ~/.config/ghostty/config.ghostty
-└── vscode/
-    └── .config/Code/User/
-        └── settings.json  → ~/.config/Code/User/settings.json
+├── dot_bashrc                              → ~/.bashrc
+├── dot_profile                             → ~/.profile
+├── dot_gitconfig                           → ~/.gitconfig
+├── dot_conkyrc                             → ~/.conkyrc
+├── dot_config/
+│   ├── ghostty/
+│   │   └── empty_config.ghostty           → ~/.config/ghostty/config.ghostty
+│   └── Code/User/
+│       └── settings.json                  → ~/.config/Code/User/settings.json
+├── .chezmoiignore                          — files chezmoi should not manage
+└── README.md                              — this file (not deployed to ~)
 ```
 
-Planned future packages:
-- `nvim/` — Neovim config at `~/.config/nvim/` (not yet configured)
+The `empty_` prefix on the ghostty config tells Chezmoi to create the file even though it is
+currently empty (a placeholder for future configuration).
 
 ## Machine-Specific Config
 
@@ -64,21 +80,21 @@ In `~/.gitconfig`, add:
 ## Setting Up a New Machine
 
 ```bash
-# 1. Install stow
-sudo apt install stow
+# 1. Install chezmoi (no sudo required)
+sh -c "$(curl -fsLS get.chezmoi.io)" -- -b ~/.local/bin
 
 # 2. Clone the repo
 git clone <remote-url> ~/dotfiles
 
-# 3. Remove any conflicting default files (e.g. ~/.bashrc)
-rm ~/.bashrc ~/.profile  # etc.
+# 3. Create chezmoi config pointing at the repo
+mkdir -p ~/.config/chezmoi
+echo 'sourceDir = "/home/connor/dotfiles"' > ~/.config/chezmoi/chezmoi.toml
 
-# 4. Stow each package
-cd ~/dotfiles
-stow bash git conky ghostty vscode
+# 4. Apply
+chezmoi apply
 
-# 5. Set up machine-local config
-cp ~/.gitconfig-work.example ~/.gitconfig-work  # if applicable
+# 5. Set up machine-local config (e.g. git work email)
+# Create ~/.gitconfig-work manually
 ```
 
 ## Theme
