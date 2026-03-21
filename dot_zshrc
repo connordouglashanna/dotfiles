@@ -1,0 +1,57 @@
+# ~/.zshrc: executed by zsh for interactive shells.
+
+# If not running interactively, don't do anything
+[[ $- != *i* ]] && return
+
+# History settings
+HISTFILE=~/.zsh_history
+HISTSIZE=1000
+SAVEHIST=2000
+setopt HIST_IGNORE_DUPS     # don't store duplicate commands
+setopt HIST_IGNORE_SPACE    # don't store commands starting with space
+setopt APPEND_HISTORY       # append to history file, don't overwrite
+
+# Completion system
+autoload -Uz compinit && compinit
+
+# Color support for ls (cross-platform: GNU ls on Linux, BSD ls on macOS)
+if ls --color=auto /dev/null 2>/dev/null; then
+    alias ls='ls --color=auto'
+else
+    alias ls='ls -G'
+fi
+
+alias grep='grep --color=auto'
+alias fgrep='fgrep --color=auto'
+alias egrep='egrep --color=auto'
+
+# Common ls aliases
+alias ll='ls -alF'
+alias la='ls -A'
+alias l='ls -CF'
+
+# Load zsh aliases if present
+if [ -f ~/.zsh_aliases ]; then
+    . ~/.zsh_aliases
+fi
+
+# NVM
+export NVM_DIR="$HOME/.nvm"
+[ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
+
+# Local bin path
+export PATH="$PATH:$HOME/.local/bin"
+
+# uv shell completion
+eval "$(uv generate-shell-completion zsh)"
+
+# fastfetch on shell start
+if command -v fastfetch &>/dev/null; then
+    fastfetch
+fi
+
+# Starship prompt
+eval "$(starship init zsh)"
+
+# Default working directory
+cd ~/Documents/git_projects
