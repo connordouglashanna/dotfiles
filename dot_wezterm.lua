@@ -27,5 +27,7 @@ config.font = wezterm.font_with_fallback {
 }
 config.color_scheme = 'Catppuccin Mocha'
 
+config.window_close_confirmation = 'NeverPrompt'
+
 -- Finally, return the configuration to wezterm:
 return config
