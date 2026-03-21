@@ -53,5 +53,8 @@ fi
 # Starship prompt
 eval "$(starship init zsh)"
 
+# Adding fzf to .zshrc
+source <(fzf --zsh)
+
 # Default working directory
 cd ~/Documents/git_projects
