@@ -53,6 +53,9 @@ fi
 # Starship prompt
 eval "$(starship init zsh)"
 
+# Adding zoxide
+eval "$(zoxide init zsh)"
+
 # Adding fzf to .zshrc
 source <(fzf --zsh)
 
