@@ -13,8 +13,12 @@ config.keys = {
   -- Split horizontal (right) with 'Ctrl-B' then '%'
   { key = '%', mods = 'LEADER', action = wezterm.action.SplitHorizontal { domain = 'CurrentPaneDomain' } },
    -- Split vertical (down) with 'Ctrl-B' then '"'
- { key = '"', mods = 'LEADER', action = wezterm.action.SplitVertical { domain = 'CurrentPaneDomain' } },
+  { key = '"', mods = 'LEADER', action = wezterm.action.SplitVertical { domain = 'CurrentPaneDomain' } },
+  { key = 'x', mods = 'LEADER', action = wezterm.action.CloseCurrentPane { confirm = false } },
 }
+
+-- Disabling the confirmation message 
+config.window_close_confirmation = 'NeverPrompt'
 
 -- For example, changing the initial geometry for new windows:
 config.initial_cols = 120
