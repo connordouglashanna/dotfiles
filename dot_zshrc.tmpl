@@ -1,0 +1,40 @@
+# ~/.zshrc: executed by zsh for interactive shells.
+
+# If not running interactively, don't do anything
+[[ $- != *i* ]] && return
+
+# History settings
+HISTFILE=~/.zsh_history
+HISTSIZE=1000
+SAVEHIST=2000
+setopt HIST_IGNORE_DUPS     # don't store duplicate commands
+setopt HIST_IGNORE_SPACE    # don't store commands starting with space
+setopt APPEND_HISTORY       # append to history file, don't overwrite
+
+# Completion system
+autoload -Uz compinit && compinit
+
+# --- SHARED CONFIG ---
+{{- template "shell_common.tmpl" (dict "shell" "zsh" "chezmoi" .chezmoi) -}}
+
+# Adding fzf to .zshrc
+if command -v fzf &>/dev/null; then
+  source <(fzf --zsh)
+fi
+
+# Load zsh aliases if present
+if [ -f ~/.zsh_aliases ]; then
+    . ~/.zsh_aliases
+fi
+
+# uv shell completion
+if command -v uv &>/dev/null; then
+  eval "$(uv generate-shell-completion zsh)"
+fi
+
+# Default working directory
+{{ if eq .chezmoi.os "darwin" -}}
+cd ~
+{{- else -}}
+cd Documents/git_projects
+{{- end }}

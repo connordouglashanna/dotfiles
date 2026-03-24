@@ -1,0 +1,50 @@
+# ~/.bashrc: executed by bash(1) for non-login shells.
+
+# If not running interactively, don't do anything
+case $- in
+    *i*) ;;
+      *) return;;
+esac
+
+# History settings
+HISTCONTROL=ignoreboth
+shopt -s histappend
+HISTSIZE=1000
+HISTFILESIZE=2000
+
+# Terminal settings
+shopt -s checkwinsize
+
+# --- SHARED CONFIG ---
+{{- template "shell_common.tmpl" (dict "shell" "bash" "chezmoi" .chezmoi) -}}
+
+# Bash-specific integration
+if command -v fzf &>/dev/null; then
+  eval "$(fzf --bash)"
+fi
+
+# Load bash aliases if present
+if [ -f ~/.bash_aliases ]; then
+    . ~/.bash_aliases
+fi
+
+# uv shell completion
+if command -v uv &>/dev/null; then
+  eval "$(uv generate-shell-completion bash)"
+fi
+
+# bash-completion integration
+if ! shopt -oq posix; then
+  if [ -f /usr/share/bash-completion/bash_completion ]; then
+    . /usr/share/bash-completion/bash_completion
+  elif [ -f /etc/bash_completion ]; then
+    . /etc/bash_completion
+  fi
+fi
+
+# Default working directory
+{{ if eq .chezmoi.os "darwin" -}}
+cd ~
+{{- else -}}
+cd Documents/git_projects
+{{- end }}
