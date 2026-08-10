@@ -1,7 +1,7 @@
 # --- Shared Environment Variables ---
 export EDITOR="vim"
 export NVM_DIR="$HOME/.nvm"
-[ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
+# [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"  <-- Removed for lazy loading
 
 # Add local bin to PATH
 if [ -d "$HOME/.local/bin" ]; then
@@ -17,10 +17,20 @@ alias la='ls -A'
 alias l='ls -CF'
 
 # --- OS Specific LS Colors ---
+# `vivid generate` costs ~100ms because it spawns a process; cache its output
+# and regenerate only when the vivid binary is newer than the cache.
+# Read back with the `read` builtin, NOT $(cat ...) - cat would spawn the very
+# process we are trying to avoid.
 {{ if eq .chezmoi.os "darwin" -}}
-# macOS Specific
 if command -v vivid &>/dev/null; then
-  export LS_COLORS="$(vivid generate catppuccin-mocha)"
+  _lsc_cache="$HOME/.config/ls_colors"
+  _lsc_bin="$(command -v vivid)"
+  if [ ! -s "$_lsc_cache" ] || [ "$_lsc_bin" -nt "$_lsc_cache" ]; then
+      vivid generate catppuccin-mocha > "$_lsc_cache" 2>/dev/null
+  fi
+  IFS= read -r LS_COLORS < "$_lsc_cache" 2>/dev/null || :
+  export LS_COLORS
+  unset _lsc_cache _lsc_bin
   if command -v gls &>/dev/null; then
     alias ls='gls --color=auto'
   else
@@ -30,9 +40,15 @@ else
   alias ls='ls -G'
 fi
 {{ else -}}
-# Linux / Windows Specific
 if command -v vivid &>/dev/null; then
-  export LS_COLORS="$(vivid generate catppuccin-mocha)"
+  _lsc_cache="$HOME/.config/ls_colors"
+  _lsc_bin="$(command -v vivid)"
+  if [ ! -s "$_lsc_cache" ] || [ "$_lsc_bin" -nt "$_lsc_cache" ]; then
+      vivid generate catppuccin-mocha > "$_lsc_cache" 2>/dev/null
+  fi
+  IFS= read -r LS_COLORS < "$_lsc_cache" 2>/dev/null || :
+  export LS_COLORS
+  unset _lsc_cache _lsc_bin
   alias ls='ls --color=auto'
 elif [ -x /usr/bin/dircolors ]; then
     test -r ~/.dircolors && eval "$(dircolors -b ~/.dircolors)" || eval "$(dircolors -b)"
@@ -44,18 +60,54 @@ fi
 
 # --- Tool Initializations ---
 
-# Fastfetch
+# Fastfetch (Optimized via ~/.config/fastfetch/config.jsonc)
 if command -v fastfetch &>/dev/null; then
     fastfetch
 fi
 
-# Starship
-if command -v starship &>/dev/null; then
-    eval "$(starship init {{ .shell }})"
+# Lazy load NVM
+export NVM_DIR="$HOME/.nvm"
+function nvm {
+    unset -f nvm node npm npx
+    [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
+    nvm "$@"
+}
+function node {
+    unset -f nvm node npm npx
+    [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
+    node "$@"
+}
+function npm {
+    unset -f nvm node npm npx
+    [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
+    npm "$@"
+}
+function npx {
+    unset -f nvm node npm npx
+    [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
+    npx "$@"
+}
+
+# Starship (pre-generated init, self-healing).
+# The cached init embeds an ABSOLUTE path to the starship binary, so a package
+# manager update that moves or unshims it leaves the cache pointing at a dead
+# path - producing an error on every prompt. Two guards:
+#   1. Check the binary exists FIRST; no starship => source nothing, stay quiet.
+#   2. If the binary is newer than the cache, regenerate the cache.
+if command -v starship >/dev/null 2>&1; then
+    _ss_cache="$HOME/.config/starship.{{ .shell }}"
+    _ss_bin="$(command -v starship)"
+    if [ ! -s "$_ss_cache" ] || [ "$_ss_bin" -nt "$_ss_cache" ]; then
+        starship init {{ .shell }} --print-full-init > "$_ss_cache" 2>/dev/null
+    fi
+    [ -s "$_ss_cache" ] && . "$_ss_cache"
+    unset _ss_cache _ss_bin
 fi
 
-# Zoxide
-if command -v zoxide &>/dev/null; then
+# Zoxide (Optimized: sourcing pre-generated init)
+if [ -f "$HOME/.config/zoxide.{{ .shell }}" ]; then
+    . "$HOME/.config/zoxide.{{ .shell }}"
+elif command -v zoxide &>/dev/null; then
     eval "$(zoxide init {{ .shell }})"
 fi
 
