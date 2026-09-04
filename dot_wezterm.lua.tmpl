@@ -4,9 +4,13 @@ local wezterm = require 'wezterm'
 -- This will hold the configuration.
 local config = wezterm.config_builder()
 
--- setting default shell to Bash on this Windows machine
-config.default_prog = { "C:\\\\Program Files\\\\Git\\\\bin\\\\bash.exe", "--login", "-i"}
+{{ if eq .chezmoi.os "windows" -}}
+-- Windows has no useful default login shell for our purposes, so point WezTerm
+-- at Git Bash explicitly. Unix hosts are left alone: WezTerm follows $SHELL,
+-- which is already whatever the user configured.
+config.default_prog = { 'C:\\Program Files\\Git\\bin\\bash.exe', '--login', '-i' }
 
+{{ end -}}
 -- This is where you actually apply your config choices.
 
 -- NOTE: the tmux-style leader (Ctrl-B) and its split bindings were removed.
@@ -29,7 +33,9 @@ config.initial_cols = 120
 config.initial_rows = 34
 
 -- or, changing the font size and color scheme.
-config.font_size = 12
+-- Sized per host: the Windows machine runs a lower-DPI external display, the
+-- Mac a Retina panel, so a single value does not read the same on both.
+config.font_size = {{ if eq .chezmoi.os "windows" }}12{{ else }}15{{ end }}
 
 -- Ricing "Usual Suspects"
 -- Horizontal padding kept for readability; vertical trimmed, since 20px top +
