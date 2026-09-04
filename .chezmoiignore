@@ -7,6 +7,17 @@ README.md
 # Both entry points exist in the source tree and render the same shared
 # template (.chezmoitemplates/herdr_config.toml). Each machine ignores the
 # path that does not apply to it, so only one is ever materialised.
+#
+# Neovim has the same split, but a whole config tree rather than one file:
+#   windows -> ~/AppData/Local/nvim   (note: Local, not Roaming)
+#   linux   -> ~/.config/nvim
+#   macos   -> ~/.config/nvim
+# Duplicating nine files per OS is not worth it when none of them contain
+# OS-specific content, so the real tree lives at .config/nvim on every host
+# and Windows gets a symlink (AppData/Local/symlink_nvim.tmpl) pointing at
+# it. That keeps one copy of the truth. Windows needs Developer Mode (or an
+# elevated shell) to create symlinks; if that is unavailable, setting
+# XDG_CONFIG_HOME to ~/.config also makes Neovim read the real tree.
 {{ if eq .chezmoi.os "windows" }}
 .config/herdr
 {{ else }}
