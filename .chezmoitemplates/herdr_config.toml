@@ -1,0 +1,26 @@
+onboarding = false
+
+[ui]
+# Hide the tab row when a space has exactly one tab; it reappears automatically
+# once a second tab exists. Tabs stay fully available via prefix+c (Ctrl+B c).
+# The spaces sidebar handles project-level switching, so a single-tab row shows
+# no information worth a full terminal row.
+hide_tab_bar_when_single_tab = true
+
+[ui.toast]
+delivery = "system"
+
+[terminal]
+{{ if eq .chezmoi.os "windows" -}}
+default_shell = 'C:\Program Files\Git\bin\bash.exe'
+# NOTE: shell_mode = "login" falls back to cmd.exe on native Windows. Left at
+# default "auto" (non-login here); ~/.profile is loaded from ~/.bashrc instead.
+{{- else -}}
+# Empty means $SHELL, then /bin/sh - correct on Unix, where the login shell is
+# already whatever the user configured.
+default_shell = ""
+# "auto" starts login shells on macOS (so /etc/profile and Homebrew init run in
+# new panes) and keeps non-login behaviour elsewhere. The cmd.exe fallback that
+# makes "login" unusable is a native-Windows problem only.
+shell_mode = "auto"
+{{- end }}

@@ -28,3 +28,9 @@ fi
 
 # Created by `pipx` on 2026-01-27 02:37:46
 export PATH="$PATH:/home/connor/.local/bin"
+
+# In a LOGIN shell this file resumes *after* ~/.bashrc has finished, so the
+# prepends above land later than .bashrc's own PATH cleanup. Re-run it here.
+# Guarded because ~/.profile is also read by non-bash shells, where the
+# function (defined in ~/.bashrc) does not exist.
+command -v _clean_path >/dev/null 2>&1 && _clean_path

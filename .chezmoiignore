@@ -1,1 +1,14 @@
 README.md
+
+# herdr stores its config at a different path per OS:
+#   windows -> ~/AppData/Roaming/herdr/config.toml
+#   linux   -> ~/.config/herdr/config.toml
+#   macos   -> ~/.config/herdr/config.toml
+# Both entry points exist in the source tree and render the same shared
+# template (.chezmoitemplates/herdr_config.toml). Each machine ignores the
+# path that does not apply to it, so only one is ever materialised.
+{{ if eq .chezmoi.os "windows" }}
+.config/herdr
+{{ else }}
+AppData
+{{ end }}

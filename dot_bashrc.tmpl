@@ -1,5 +1,13 @@
 # ~/.bashrc: executed by bash(1) for non-login shells.
 
+# Guard against multiple sourcing *within a single shell* (.profile:15 sources
+# this file, and this file sources .profile in non-login shells).
+# Deliberately NOT exported: `export` leaks the flag into every child process,
+# so nested shells return at the check above and silently lose starship,
+# zoxide, LS_COLORS and fastfetch. A plain shell variable is per-process.
+if [ -n "$BASHRC_READ" ]; then return; fi
+BASHRC_READ=1
+
 # If not running interactively, don't do anything
 case $- in
     *i*) ;;
@@ -18,8 +26,10 @@ shopt -s checkwinsize
 # --- SHARED CONFIG ---
 {{- template "shell_common.tmpl" (dict "shell" "bash" "chezmoi" .chezmoi) -}}
 
-# Bash-specific integration
-if command -v fzf &>/dev/null; then
+# Bash-specific integration (Optimized: sourcing pre-generated init)
+if [ -f "$HOME/.config/fzf.bash" ]; then
+  . "$HOME/.config/fzf.bash"
+elif command -v fzf &>/dev/null; then
   eval "$(fzf --bash)"
 fi
 
@@ -28,8 +38,10 @@ if [ -f ~/.bash_aliases ]; then
     . ~/.bash_aliases
 fi
 
-# uv shell completion
-if command -v uv &>/dev/null; then
+# uv shell completion (Optimized: sourcing pre-generated completion)
+if [ -f "$HOME/.config/uv.bash" ]; then
+  . "$HOME/.config/uv.bash"
+elif command -v uv &>/dev/null; then
   eval "$(uv generate-shell-completion bash)"
 fi
 
@@ -41,10 +53,49 @@ if ! shopt -oq posix; then
     . /etc/bash_completion
   fi
 fi
+{{ if eq .chezmoi.os "windows" }}
+# Pi / Nodist
+# Was: "C:\Program Files (x86)\Nodist\bin/bin" - two bugs. MSYS splits PATH on
+# ":", so the "C:" broke into a bogus "C" entry plus a stray fragment, and the
+# trailing "/bin" pointed at a directory that does not exist.
+export PATH="/c/Program Files (x86)/Nodist/bin:$PATH"
 
-# Default working directory
-{{ if eq .chezmoi.os "darwin" -}}
-cd ~
-{{- else -}}
-cd Documents/git_projects
-{{- end }}
+# adding Python for the bq cli
+export CLOUDSDK_PYTHON="/c/Users/ConnorHanna/AppData/Local/Python/pythoncore-3.14-64/python.exe"
+{{ end }}
+# --- Login-shell config for non-login terminals (herdr, VS Code, etc.) ---
+# WezTerm launches bash with --login, so /etc/profile + ~/.profile run there.
+# herdr spawns a NON-login bash, which reads only this file - so ~/.profile's
+# PATH prepends ($HOME/bin, $HOME/.local/bin, pipx) never load.
+#
+# Sourcing ~/.profile here replays that layer. Two constraints:
+#   1. In a LOGIN shell, ~/.profile already ran and sourced us (see .profile:15).
+#      Re-sourcing it duplicates every PATH entry. Detect with: shopt -q login_shell
+#   2. ~/.profile sourcing us back is safe - the BASHRC_READ guard on line 4
+#      returns immediately - so recursion is not a concern.
+#
+if ! shopt -q login_shell; then
+    [ -f "$HOME/.profile" ] && . "$HOME/.profile"
+fi
+
+# --- PATH hygiene ---------------------------------------------------------
+# Drop nonexistent and duplicate entries, keeping the FIRST occurrence so
+# precedence is preserved. Implemented with builtins only: every subprocess
+# costs ~50-170ms on Windows, so a "cleanup" that shelled out would cost more
+# than the duplicates it removes.
+# NOT unset afterwards - ~/.profile calls it again in login shells, after its
+# own prepends have run.
+_clean_path() {
+    local IFS=':' dir out='' _had_f
+    case $- in *f*) _had_f=1 ;; *) _had_f=0 ;; esac
+    set -f                      # unquoted $PATH would otherwise glob-expand
+    for dir in $PATH; do
+        [ -n "$dir" ] || continue
+        [ -d "$dir" ] || continue
+        case ":$out:" in *":$dir:"*) continue ;; esac
+        out="${out:+$out:}$dir"
+    done
+    [ "$_had_f" = 1 ] || set +f
+    export PATH="$out"
+}
+_clean_path
