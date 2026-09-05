@@ -23,3 +23,12 @@ README.md
 {{ else }}
 AppData
 {{ end }}
+
+# The Brewfile is macOS-only in practice. Homebrew does not run on native
+# Windows at all, and while it does run on Linux, this file lists casks
+# (mactex, firefox, steam, the fonts) that only resolve on macOS - so a
+# Linux `brew bundle` would fail rather than partially apply. Gated on
+# darwin rather than "not windows" for that reason.
+{{ if ne .chezmoi.os "darwin" }}
+Brewfile
+{{ end }}
